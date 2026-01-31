@@ -1,17 +1,25 @@
 package main
 
 import (
-	"net/http"
+	"log"
+	"talk-backend/internal/config"
+	"talk-backend/internal/db"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	cfg := config.Load()
+	if cfg.App.Env == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	gdb, err := db.ConnectPostgres(cfg)
+	log.Println(gdb)
+	if err != nil {
+		log.Fatal(err)
+	}
 	r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	})
-
-	r.Run(":8080")
+	log.Printf("Starting server on :%s (%s)", cfg.App.Port, cfg.App.Env)
+	r.Run(":" + cfg.App.Port)
 }
