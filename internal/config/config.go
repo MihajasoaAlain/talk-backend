@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	App AppConfig
-	DB  DBConfig
+	App       AppConfig
+	DB        DBConfig
+	Migration Migration
 }
 
 type AppConfig struct {
@@ -24,6 +25,9 @@ type DBConfig struct {
 	Password string
 	Name     string
 	SSLMode  string
+}
+type Migration struct {
+	Valided bool
 }
 
 func Load() *Config {
@@ -43,6 +47,9 @@ func Load() *Config {
 			Password: os.Getenv("DB_PASSWORD"),
 			Name:     getEnv("DB_NAME", "postgres"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		},
+		Migration: Migration{
+			Valided: getEnv("MIGRATION", "true") == "true",
 		},
 	}
 
