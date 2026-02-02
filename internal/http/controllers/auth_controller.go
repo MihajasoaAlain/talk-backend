@@ -20,7 +20,6 @@ func clientIP(c *gin.Context) string { return c.ClientIP() }
 
 func userAgent(c *gin.Context) string { return c.GetHeader("User-Agent") }
 
-// POST /auth/register
 func (ctl *AuthController) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
