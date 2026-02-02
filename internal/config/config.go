@@ -11,6 +11,11 @@ type Config struct {
 	App       AppConfig
 	DB        DBConfig
 	Migration Migration
+	JWT       JWTConfig
+}
+
+type JWTConfig struct {
+	Secret string
 }
 
 type AppConfig struct {
@@ -50,6 +55,9 @@ func Load() *Config {
 		},
 		Migration: Migration{
 			Valided: getEnv("MIGRATION", "true") == "true",
+		},
+		JWT: JWTConfig{
+			Secret: os.Getenv("JWT_SECRET"),
 		},
 	}
 
