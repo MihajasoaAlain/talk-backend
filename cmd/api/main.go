@@ -33,7 +33,8 @@ func main() {
 	app := container.New(cfg, gdb)
 
 	r := gin.Default()
-	http.RegisterRoutes(r, app)
+
+	http.RegisterRoutes(r, app, cfg.JWT.Secret)
 
 	log.Printf("Starting server on :%s (%s)", cfg.App.Port, cfg.App.Env)
 	if err := r.Run(":" + cfg.App.Port); err != nil {
