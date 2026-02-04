@@ -13,6 +13,7 @@ import (
 func RegisterRoutes(r *gin.Engine, app *container.App, jwtSecret string) {
 	loginLimiter := middleware.NewIPLimiter(rate.Every(12*time.Second), 10)
 
+	r.GET("/ws", app.WSHandler.Handle)
 	auth := r.Group("/auth")
 	{
 		auth.POST("/register", app.AuthController.Register)
