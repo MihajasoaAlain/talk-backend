@@ -7,6 +7,7 @@ import (
 	"talk-backend/internal/http/controllers"
 	"talk-backend/internal/repository"
 	"talk-backend/internal/service"
+	"talk-backend/internal/ws"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +16,7 @@ type App struct {
 	AuthController *controllers.AuthController
 	ChatController *controllers.ChatController
 	UserController *controllers.UserController
+	WSHandler      *ws.WSHandler
 }
 
 func New(cfg *config.Config, db *gorm.DB) *App {
@@ -41,14 +43,19 @@ func New(cfg *config.Config, db *gorm.DB) *App {
 	chatService := service.NewChatService(db, convRepo, msgRepo)
 	userService := service.NewUserService(userRepo)
 
-	// controllers
 	authCtl := controllers.NewAuthController(authService)
 	chatCtl := controllers.NewChatController(chatService)
 	userCtl := controllers.NewUserController(userService)
+
+	hub := ws.NewHub()
+	go hub.Run()
+
+	wsHandler := ws.NewWSHandler(hub, chatService, cfg.JWT.Secret)
 
 	return &App{
 		AuthController: authCtl,
 		ChatController: chatCtl,
 		UserController: userCtl,
+		WSHandler:      wsHandler,
 	}
 }
