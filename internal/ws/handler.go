@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"talk-backend/internal/service"
 
@@ -24,13 +25,14 @@ func NewWSHandler(hub *Hub, chat *service.ChatService, jwtSecret string) *WSHand
 }
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool { return true }, // en prod: restreindre
 }
 
 type InMessage struct {
 	Type           string `json:"type"`
 	ConversationID uint   `json:"conversationId"`
-	Content        string `json:"content"`
+	Content        string `json:"content,omitempty"`
+	IsTyping       *bool  `json:"isTyping,omitempty"`
 }
 
 func (h *WSHandler) Handle(c *gin.Context) {
@@ -58,6 +60,7 @@ func (h *WSHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	// 4) upgrade
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
@@ -70,9 +73,11 @@ func (h *WSHandler) Handle(c *gin.Context) {
 		userID: userID,
 		roomID: roomID,
 	}
-	h.hub.register <- client
 
+	h.hub.register <- client
 	go client.writePump()
+
+	lastTyping := time.Time{}
 
 	for {
 		_, p, err := conn.ReadMessage()
@@ -84,7 +89,29 @@ func (h *WSHandler) Handle(c *gin.Context) {
 		if err := json.Unmarshal(p, &in); err != nil {
 			continue
 		}
-		if in.Type != "message" || in.Content == "" || in.ConversationID != roomID {
+
+		if in.ConversationID != roomID {
+			continue
+		}
+
+		if in.Type == "typing" && in.IsTyping != nil {
+			if time.Since(lastTyping) < 500*time.Millisecond {
+				continue
+			}
+			lastTyping = time.Now()
+
+			outTyping, _ := json.Marshal(gin.H{
+				"type":           "typing",
+				"conversationId": roomID,
+				"userId":         userID,
+				"isTyping":       *in.IsTyping,
+			})
+
+			h.hub.broadcast <- RoomMessage{RoomID: roomID, Data: outTyping}
+			continue
+		}
+
+		if in.Type != "message" || strings.TrimSpace(in.Content) == "" {
 			continue
 		}
 
@@ -103,6 +130,7 @@ func (h *WSHandler) Handle(c *gin.Context) {
 				"sentAt":         msg.SentAt,
 			},
 		})
+
 		h.hub.broadcast <- RoomMessage{RoomID: roomID, Data: out}
 	}
 
