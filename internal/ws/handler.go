@@ -60,7 +60,6 @@ func (h *WSHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	// 4) upgrade
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
