@@ -13,9 +13,12 @@ import (
 	"talk-backend/internal/container"
 	"talk-backend/internal/db"
 	"talk-backend/internal/http"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	_ "talk-backend/docs"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -41,6 +44,14 @@ func main() {
 	app := container.New(cfg, gdb)
 
 	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	http.RegisterRoutes(r, app, cfg.JWT.Secret)
 
