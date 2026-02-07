@@ -20,6 +20,17 @@ func clientIP(c *gin.Context) string { return c.ClientIP() }
 
 func userAgent(c *gin.Context) string { return c.GetHeader("User-Agent") }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Register payload"
+// @Success 201 {object} dto.RegisterResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /auth/register [post]
 func (ctl *AuthController) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -33,17 +44,28 @@ func (ctl *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "registered",
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
+	c.JSON(http.StatusCreated, dto.RegisterResponse{
+		Message: "registered",
+		User: dto.UserPublic{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
 		},
 	})
 }
 
 // POST /auth/login
+// Login godoc
+// @Summary Login
+// @Description Authenticate a user and return access and refresh tokens.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login payload"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /auth/login [post]
 func (ctl *AuthController) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -65,6 +87,17 @@ func (ctl *AuthController) Login(c *gin.Context) {
 }
 
 // POST /auth/refresh
+// Refresh godoc
+// @Summary Refresh tokens
+// @Description Refresh access and refresh tokens using a refresh token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RefreshRequest true "Refresh payload"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /auth/refresh [post]
 func (ctl *AuthController) Refresh(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -84,11 +117,18 @@ func (ctl *AuthController) Refresh(c *gin.Context) {
 	})
 }
 
+// Logout godoc
+// @Summary Logout
+// @Description Revoke a refresh token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LogoutRequest true "Logout payload"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /auth/logout [post]
 func (ctl *AuthController) Logout(c *gin.Context) {
-	type logoutReq struct {
-		RefreshToken string `json:"refresh_token" binding:"required"`
-	}
-	var req logoutReq
+	var req dto.LogoutRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
