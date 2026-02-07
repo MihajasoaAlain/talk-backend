@@ -7,12 +7,15 @@ import (
 	"talk-backend/internal/http/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/time/rate"
 )
 
 func RegisterRoutes(r *gin.Engine, app *container.App, jwtSecret string) {
 	loginLimiter := middleware.NewIPLimiter(rate.Every(12*time.Second), 10)
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/ws", app.WSHandler.Handle)
 	auth := r.Group("/auth")
 	{

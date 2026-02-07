@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"talk-backend/internal/http/dto"
 	"talk-backend/internal/http/middleware"
 	"talk-backend/internal/service"
 
@@ -17,6 +18,16 @@ func NewUserController(user *service.UserService) *UserController {
 	return &UserController{user: user}
 }
 
+// Me godoc
+// @Summary Get current user
+// @Description Return the authenticated user's profile.
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dto.MeResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/me [get]
 func (ctl *UserController) Me(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -30,12 +41,12 @@ func (ctl *UserController) Me(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"user": gin.H{
-			"id":         user.ID,
-			"username":   user.Username,
-			"email":      user.Email,
-			"created_at": user.CreatedAt,
+	c.JSON(http.StatusOK, dto.MeResponse{
+		User: dto.UserMe{
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
 		},
 	})
 }

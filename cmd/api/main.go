@@ -1,3 +1,10 @@
+// @title Talk Backend API
+// @version 1.0
+// @description API for Talk backend services.
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -8,6 +15,7 @@ import (
 	"talk-backend/internal/http"
 
 	"github.com/gin-gonic/gin"
+	_ "talk-backend/docs"
 )
 
 func main() {

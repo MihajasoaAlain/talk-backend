@@ -19,6 +19,19 @@ func NewChatController(chat *service.ChatService) *ChatController {
 	return &ChatController{chat: chat}
 }
 
+// CreateDirect godoc
+// @Summary Create a direct conversation
+// @Description Create a one-to-one conversation with another user.
+// @Tags conversations
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.DirectConversationRequest true "Direct conversation payload"
+// @Success 201 {object} dto.ConversationResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/conversations/direct [post]
 func (ctl *ChatController) CreateDirect(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
@@ -41,6 +54,16 @@ func (ctl *ChatController) CreateDirect(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"conversation": conv})
 }
 
+// ListMyConversations godoc
+// @Summary List my conversations
+// @Description Return conversations the authenticated user is a member of.
+// @Tags conversations
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dto.ConversationsResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/conversations [get]
 func (ctl *ChatController) ListMyConversations(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
@@ -57,6 +80,21 @@ func (ctl *ChatController) ListMyConversations(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"conversations": convs})
 }
 
+// SendMessage godoc
+// @Summary Send a message
+// @Description Send a message in a conversation.
+// @Tags messages
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Conversation ID"
+// @Param request body dto.SendMessageRequest true "Message payload"
+// @Success 201 {object} dto.MessageResponseData
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/conversations/{id}/messages [post]
 func (ctl *ChatController) SendMessage(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
@@ -90,6 +128,21 @@ func (ctl *ChatController) SendMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": msg})
 }
 
+// GetMessages godoc
+// @Summary Get messages
+// @Description Get messages in a conversation.
+// @Tags messages
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Conversation ID"
+// @Param limit query int false "Max messages to return"
+// @Param beforeId query int false "Return messages before this message ID"
+// @Success 200 {object} dto.MessagesResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/conversations/{id}/messages [get]
 func (ctl *ChatController) GetMessages(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
