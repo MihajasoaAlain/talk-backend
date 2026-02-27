@@ -10,7 +10,7 @@ type Client struct {
 	conn   *websocket.Conn
 	hub    *Hub
 	send   chan []byte
-	userID uint
+	userID string
 	roomID uint
 }
 

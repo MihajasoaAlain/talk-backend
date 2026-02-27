@@ -23,7 +23,7 @@ func NewChatService(db *gorm.DB, convs repository.ConversationRepository, messag
 	return &ChatService{db: db, convs: convs, messages: messages}
 }
 
-func (s *ChatService) CreateDirectConversation(me uint, other uint) (*models.Conversation, error) {
+func (s *ChatService) CreateDirectConversation(me string, other string) (*models.Conversation, error) {
 	if conv, err := s.convs.FindDirectConversation(me, other); err == nil && conv != nil {
 		return conv, nil
 	}
@@ -47,11 +47,11 @@ func (s *ChatService) CreateDirectConversation(me uint, other uint) (*models.Con
 	return conv, nil
 }
 
-func (s *ChatService) ListMyConversations(me uint) ([]models.Conversation, error) {
+func (s *ChatService) ListMyConversations(me string) ([]models.Conversation, error) {
 	return s.convs.ListUserConversations(me)
 }
 
-func (s *ChatService) SendMessage(me uint, conversationID uint, content string) (*models.Message, error) {
+func (s *ChatService) SendMessage(me string, conversationID uint, content string) (*models.Message, error) {
 	ok, err := s.convs.IsMember(conversationID, me)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (s *ChatService) SendMessage(me uint, conversationID uint, content string) 
 	return msg, nil
 }
 
-func (s *ChatService) GetMessages(me uint, conversationID uint, limit int, beforeID *uint) ([]models.Message, error) {
+func (s *ChatService) GetMessages(me string, conversationID uint, limit int, beforeID *uint) ([]models.Message, error) {
 	ok, err := s.convs.IsMember(conversationID, me)
 	if err != nil {
 		return nil, err

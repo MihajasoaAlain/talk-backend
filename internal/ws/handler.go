@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +28,8 @@ func NewWSHandler(hub *Hub, chat *service.ChatService, jwtSecret string) *WSHand
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true }, // en prod: restreindre
 }
+
+var uuidV4LikeRe = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
 
 type InMessage struct {
 	Type           string `json:"type"`
@@ -137,10 +140,10 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	_ = conn.Close()
 }
 
-func (h *WSHandler) extractUserID(authHeader string) (uint, bool) {
+func (h *WSHandler) extractUserID(authHeader string) (string, bool) {
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 || parts[0] != "Bearer" || parts[1] == "" {
-		return 0, false
+		return "", false
 	}
 
 	tok, err := jwt.Parse(parts[1], func(t *jwt.Token) (any, error) {
@@ -150,31 +153,30 @@ func (h *WSHandler) extractUserID(authHeader string) (uint, bool) {
 		return []byte(h.jwtSecret), nil
 	})
 	if err != nil || tok == nil || !tok.Valid {
-		return 0, false
+		return "", false
 	}
 
 	claims, ok := tok.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, false
+		return "", false
 	}
 
 	sub, ok := claims["sub"]
 	if !ok {
-		return 0, false
+		return "", false
 	}
 
 	switch v := sub.(type) {
-	case float64:
-		return uint(v), true
-	case uint:
-		return v, true
 	case string:
-		n, err := strconv.ParseUint(v, 10, 64)
-		if err != nil || n == 0 {
-			return 0, false
+		if !isUUID(v) {
+			return "", false
 		}
-		return uint(n), true
+		return v, true
 	default:
-		return 0, false
+		return "", false
 	}
+}
+
+func isUUID(v string) bool {
+	return uuidV4LikeRe.MatchString(v)
 }
