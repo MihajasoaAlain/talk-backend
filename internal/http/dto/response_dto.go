@@ -7,7 +7,9 @@ import (
 )
 
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Code    string `json:"code"`
+	Error   string `json:"error"`
+	Details string `json:"details,omitempty"`
 }
 
 type MessageResponse struct {
