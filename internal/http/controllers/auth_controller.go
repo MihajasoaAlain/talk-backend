@@ -42,7 +42,7 @@ func (ctl *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := ctl.auth.Register(req.Username, req.Email, req.Password)
+	user, err := ctl.auth.Register(req.Username, req.Email, req.Password, req.AvatarURL)
 	if err != nil {
 		if errors.Is(err, repository.ErrEmailAlreadyExists) {
 			response.Error(c, http.StatusConflict, response.CodeEmailAlreadyExists, response.MsgEmailAlreadyExists)
@@ -55,9 +55,10 @@ func (ctl *AuthController) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, dto.RegisterResponse{
 		Message: response.MsgRegistered,
 		User: dto.UserPublic{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    user.Email,
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			AvatarURL: user.AvatarURL,
 		},
 	})
 }
