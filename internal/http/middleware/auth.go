@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,8 @@ import (
 )
 
 const CtxUserIDKey = "userID"
+
+var uuidV4LikeRe = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
 
 func RequireAuth(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -65,13 +68,14 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 
 		log.Printf("[AUTH] sub claim: %v (type: %T)", sub, sub)
 
-		var userID uint
+		var userID string
 		switch v := sub.(type) {
-		case float64:
-			userID = uint(v)
-		case int:
-			userID = uint(v)
-		case uint:
+		case string:
+			if !isUUID(v) {
+				log.Printf("[AUTH] Invalid UUID sub: %s", v)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				return
+			}
 			userID = v
 		default:
 			log.Printf("[AUTH] Unknown sub type: %T", sub)
@@ -79,17 +83,21 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		log.Printf("[AUTH] Success! userID=%d", userID)
+		log.Printf("[AUTH] Success! userID=%s", userID)
 		c.Set(CtxUserIDKey, userID)
 		c.Next()
 	}
 }
 
-func GetUserID(c *gin.Context) (uint, bool) {
+func GetUserID(c *gin.Context) (string, bool) {
 	v, ok := c.Get(CtxUserIDKey)
 	if !ok {
-		return 0, false
+		return "", false
 	}
-	id, ok := v.(uint)
+	id, ok := v.(string)
 	return id, ok
+}
+
+func isUUID(v string) bool {
+	return uuidV4LikeRe.MatchString(v)
 }

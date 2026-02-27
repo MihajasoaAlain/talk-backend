@@ -5,8 +5,8 @@ import "time"
 type AuditLog struct {
 	ID uint `gorm:"primaryKey"`
 
-	UserID *uint  `gorm:"index"`
-	Event  string `gorm:"index;not null"`
+	UserID *string `gorm:"type:uuid;index"`
+	Event  string  `gorm:"index;not null"`
 
 	Email string `gorm:"index"`
 	IP    string

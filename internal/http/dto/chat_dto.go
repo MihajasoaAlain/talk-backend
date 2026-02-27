@@ -1,7 +1,7 @@
 package dto
 
 type DirectConversationRequest struct {
-	UserID uint `json:"userId" binding:"required"`
+	UserID string `json:"userId" binding:"required,uuid"`
 }
 
 type SendMessageRequest struct {

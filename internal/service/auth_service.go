@@ -135,7 +135,7 @@ func (s *AuthService) Logout(refreshToken, ip, ua string) error {
 	return nil
 }
 
-func (s *AuthService) signAccessToken(userID uint) (string, error) {
+func (s *AuthService) signAccessToken(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": userID,
 		"iss": s.cfg.Issuer,
@@ -146,7 +146,7 @@ func (s *AuthService) signAccessToken(userID uint) (string, error) {
 	return t.SignedString([]byte(s.cfg.JWTSecret))
 }
 
-func (s *AuthService) issueRefreshToken(userID uint) (string, error) {
+func (s *AuthService) issueRefreshToken(userID string) (string, error) {
 	raw, err := randomToken(32)
 	if err != nil {
 		return "", err
@@ -162,7 +162,7 @@ func (s *AuthService) issueRefreshToken(userID uint) (string, error) {
 	return raw, nil
 }
 
-func (s *AuthService) auditLogin(userID *uint, email, ip, ua, event string) {
+func (s *AuthService) auditLogin(userID *string, email, ip, ua, event string) {
 	_ = s.audit.Create(&models.AuditLog{
 		UserID: userID,
 		Event:  event,

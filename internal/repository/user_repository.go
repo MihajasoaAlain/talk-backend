@@ -11,7 +11,7 @@ var ErrUserNotFound = errors.New("user not found")
 
 type UserRepository interface {
 	Create(user *models.User) error
-	FindByID(id uint) (*models.User, error)
+	FindByID(id string) (*models.User, error)
 	FindByEmail(email string) (*models.User, error)
 	Update(user *models.User) error
 }
@@ -24,9 +24,9 @@ func (r *userRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *userRepository) FindByID(id uint) (*models.User, error) {
+func (r *userRepository) FindByID(id string) (*models.User, error) {
 	var user models.User
-	err := r.db.First(&user, id).Error
+	err := r.db.Where("id = ?", id).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrUserNotFound

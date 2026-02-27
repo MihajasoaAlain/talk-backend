@@ -9,10 +9,10 @@ import (
 type ConversationRepository interface {
 	CreateConversation(tx *gorm.DB, conv *models.Conversation) error
 	AddMembers(tx *gorm.DB, members []models.ConversationMember) error
-	IsMember(conversationID uint, userID uint) (bool, error)
-	ListUserConversations(userID uint) ([]models.Conversation, error)
+	IsMember(conversationID uint, userID string) (bool, error)
+	ListUserConversations(userID string) ([]models.Conversation, error)
 
-	FindDirectConversation(userA uint, userB uint) (*models.Conversation, error)
+	FindDirectConversation(userA string, userB string) (*models.Conversation, error)
 }
 
 type conversationRepository struct{ db *gorm.DB }
@@ -29,7 +29,7 @@ func (r *conversationRepository) AddMembers(tx *gorm.DB, members []models.Conver
 	return tx.Create(&members).Error
 }
 
-func (r *conversationRepository) IsMember(conversationID uint, userID uint) (bool, error) {
+func (r *conversationRepository) IsMember(conversationID uint, userID string) (bool, error) {
 	var count int64
 	err := r.db.Model(&models.ConversationMember{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
@@ -37,7 +37,7 @@ func (r *conversationRepository) IsMember(conversationID uint, userID uint) (boo
 	return count > 0, err
 }
 
-func (r *conversationRepository) ListUserConversations(userID uint) ([]models.Conversation, error) {
+func (r *conversationRepository) ListUserConversations(userID string) ([]models.Conversation, error) {
 	var convs []models.Conversation
 	err := r.db.
 		Joins("JOIN conversation_members cm ON cm.conversation_id = conversations.id").
@@ -47,7 +47,7 @@ func (r *conversationRepository) ListUserConversations(userID uint) ([]models.Co
 	return convs, err
 }
 
-func (r *conversationRepository) FindDirectConversation(userA uint, userB uint) (*models.Conversation, error) {
+func (r *conversationRepository) FindDirectConversation(userA string, userB string) (*models.Conversation, error) {
 	var conv models.Conversation
 	err := r.db.
 		Table("conversations").

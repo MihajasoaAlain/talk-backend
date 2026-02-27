@@ -13,7 +13,7 @@ func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) GetMe(userID uint) (*models.User, error) {
+func (s *UserService) GetMe(userID string) (*models.User, error) {
 	return s.repo.FindByID(userID)
 }
 
