@@ -42,6 +42,14 @@ func NewAuthService(
 }
 
 func (s *AuthService) Register(username, email, password string) (*models.User, error) {
+	_, err := s.users.FindByEmail(email)
+	if err == nil {
+		return nil, repository.ErrEmailAlreadyExists
+	}
+	if !errors.Is(err, repository.ErrUserNotFound) {
+		return nil, err
+	}
+
 	u := &models.User{Username: username, Email: email, Password: password}
 	if err := s.users.Create(u); err != nil {
 		return nil, err

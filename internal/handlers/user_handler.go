@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"talk-backend/internal/http/response"
 	"talk-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
@@ -10,8 +11,11 @@ import (
 func CreateUser(c *gin.Context) {
 	var newUser models.User
 	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.InvalidBody(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "user": newUser})
+	c.JSON(http.StatusCreated, gin.H{
+		"message": response.MsgOK,
+		"user":    newUser,
+	})
 }

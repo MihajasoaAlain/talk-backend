@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"sync"
+	"talk-backend/internal/http/response"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
@@ -40,7 +41,8 @@ func (l *ipLimiter) Middleware() gin.HandlerFunc {
 		ip := c.ClientIP()
 		if !l.get(ip).Allow() {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "too many requests",
+				"code":  response.CodeTooManyRequests,
+				"error": response.MsgTooManyRequests,
 			})
 			return
 		}
