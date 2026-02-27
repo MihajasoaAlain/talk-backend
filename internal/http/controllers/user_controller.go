@@ -5,6 +5,7 @@ import (
 
 	"talk-backend/internal/http/dto"
 	"talk-backend/internal/http/middleware"
+	"talk-backend/internal/http/response"
 	"talk-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -31,13 +32,13 @@ func NewUserController(user *service.UserService) *UserController {
 func (ctl *UserController) Me(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	user, err := ctl.user.GetMe(userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		response.Error(c, http.StatusNotFound, response.CodeNotFound, response.MsgUserNotFound)
 		return
 	}
 

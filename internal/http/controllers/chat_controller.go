@@ -6,6 +6,7 @@ import (
 
 	"talk-backend/internal/http/dto"
 	"talk-backend/internal/http/middleware"
+	"talk-backend/internal/http/response"
 	"talk-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -35,23 +36,23 @@ func NewChatController(chat *service.ChatService) *ChatController {
 func (ctl *ChatController) CreateDirect(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	var req dto.DirectConversationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.InvalidBody(c, err)
 		return
 	}
 
 	conv, err := ctl.chat.CreateDirectConversation(me, req.UserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create conversation"})
+		response.Error(c, http.StatusInternalServerError, response.CodeConversationFailed, response.MsgCreateConversation)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"conversation": conv})
+	c.JSON(http.StatusCreated, dto.ConversationResponse{Conversation: *conv})
 }
 
 // ListMyConversations godoc
@@ -67,17 +68,17 @@ func (ctl *ChatController) CreateDirect(c *gin.Context) {
 func (ctl *ChatController) ListMyConversations(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	convs, err := ctl.chat.ListMyConversations(me)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list conversations"})
+		response.Error(c, http.StatusInternalServerError, response.CodeConversationFailed, response.MsgListConversations)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"conversations": convs})
+	c.JSON(http.StatusOK, dto.ConversationsResponse{Conversations: convs})
 }
 
 // SendMessage godoc
@@ -98,34 +99,34 @@ func (ctl *ChatController) ListMyConversations(c *gin.Context) {
 func (ctl *ChatController) SendMessage(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	convID64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || convID64 == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation id"})
+		response.Error(c, http.StatusBadRequest, response.CodeInvalidRequest, response.MsgInvalidConversation)
 		return
 	}
 	convID := uint(convID64)
 
 	var req dto.SendMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.InvalidBody(c, err)
 		return
 	}
 
 	msg, err := ctl.chat.SendMessage(me, convID, req.Content)
 	if err != nil {
 		if err == service.ErrForbidden {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			response.Error(c, http.StatusForbidden, response.CodeForbidden, response.MsgForbidden)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
+		response.Error(c, http.StatusInternalServerError, response.CodeMessageFailed, response.MsgSendMessage)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": msg})
+	c.JSON(http.StatusCreated, dto.MessageResponseData{Message: *msg})
 }
 
 // GetMessages godoc
@@ -146,13 +147,13 @@ func (ctl *ChatController) SendMessage(c *gin.Context) {
 func (ctl *ChatController) GetMessages(c *gin.Context) {
 	me, ok := middleware.GetUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	convID64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || convID64 == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation id"})
+		response.Error(c, http.StatusBadRequest, response.CodeInvalidRequest, response.MsgInvalidConversation)
 		return
 	}
 	convID := uint(convID64)
@@ -170,12 +171,12 @@ func (ctl *ChatController) GetMessages(c *gin.Context) {
 	msgs, err := ctl.chat.GetMessages(me, convID, limit, beforeID)
 	if err != nil {
 		if err == service.ErrForbidden {
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			response.Error(c, http.StatusForbidden, response.CodeForbidden, response.MsgForbidden)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get messages"})
+		response.Error(c, http.StatusInternalServerError, response.CodeMessageFailed, response.MsgGetMessages)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"messages": msgs})
+	c.JSON(http.StatusOK, dto.MessagesResponse{Messages: msgs})
 }
