@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"talk-backend/internal/http/dto"
 	"talk-backend/internal/http/response"
+	"talk-backend/internal/repository"
 	"talk-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +32,7 @@ func userAgent(c *gin.Context) string { return c.GetHeader("User-Agent") }
 // @Param request body dto.RegisterRequest true "Register payload"
 // @Success 201 {object} dto.RegisterResponse
 // @Failure 400 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /auth/register [post]
 func (ctl *AuthController) Register(c *gin.Context) {
@@ -41,6 +44,10 @@ func (ctl *AuthController) Register(c *gin.Context) {
 
 	user, err := ctl.auth.Register(req.Username, req.Email, req.Password)
 	if err != nil {
+		if errors.Is(err, repository.ErrEmailAlreadyExists) {
+			response.Error(c, http.StatusConflict, response.CodeEmailAlreadyExists, response.MsgEmailAlreadyExists)
+			return
+		}
 		response.Error(c, http.StatusInternalServerError, response.CodeRegisterFailed, response.MsgRegisterFailed)
 		return
 	}
