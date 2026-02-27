@@ -17,9 +17,10 @@ type MessageResponse struct {
 }
 
 type UserPublic struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatarUrl"`
 }
 
 type RegisterResponse struct {
@@ -31,6 +32,7 @@ type UserMe struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
+	AvatarURL string    `json:"avatarUrl"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

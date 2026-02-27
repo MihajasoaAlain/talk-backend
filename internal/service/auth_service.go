@@ -41,7 +41,7 @@ func NewAuthService(
 	return &AuthService{users: users, tokens: tokens, audit: audit, cfg: cfg}
 }
 
-func (s *AuthService) Register(username, email, password string) (*models.User, error) {
+func (s *AuthService) Register(username, email, password, avatarURL string) (*models.User, error) {
 	_, err := s.users.FindByEmail(email)
 	if err == nil {
 		return nil, repository.ErrEmailAlreadyExists
@@ -50,7 +50,7 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 		return nil, err
 	}
 
-	u := &models.User{Username: username, Email: email, Password: password}
+	u := &models.User{Username: username, Email: email, Password: password, AvatarURL: avatarURL}
 	if err := s.users.Create(u); err != nil {
 		return nil, err
 	}

@@ -47,6 +47,7 @@ func (ctl *UserController) Me(c *gin.Context) {
 			ID:        user.ID,
 			Username:  user.Username,
 			Email:     user.Email,
+			AvatarURL: user.AvatarURL,
 			CreatedAt: user.CreatedAt,
 		},
 	})
