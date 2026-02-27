@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"talk-backend/internal/http/response"
 	"talk-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -42,24 +43,24 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	convStr := c.Query("conversationId")
 	conv64, err := strconv.ParseUint(convStr, 10, 64)
 	if err != nil || conv64 == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "conversationId required"})
+		response.Error(c, http.StatusBadRequest, response.CodeInvalidRequest, response.MsgConversationRequired)
 		return
 	}
 	roomID := uint(conv64)
 
 	userID, ok := h.extractUserID(c.GetHeader("Authorization"))
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		response.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, response.MsgUnauthorized)
 		return
 	}
 
 	_, checkErr := h.chat.GetMessages(userID, roomID, 1, nil)
 	if checkErr == service.ErrForbidden {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		response.Error(c, http.StatusForbidden, response.CodeForbidden, response.MsgForbidden)
 		return
 	}
 	if checkErr != nil && checkErr != service.ErrForbidden {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		response.Error(c, http.StatusInternalServerError, response.CodeInternal, response.MsgInternalServer)
 		return
 	}
 
